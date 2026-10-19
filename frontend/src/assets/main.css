@@ -1,0 +1,129 @@
+@import './base.css';
+
+/* TestFlow: 全屏应用布局，移除默认模板的居中限制 */
+html, body, #app {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+#app {
+  width: 100%;
+  max-width: none;
+}
+
+a {
+  text-decoration: none;
+  color: var(--ink);
+  transition: color 0.2s;
+}
+
+a:hover {
+  color: var(--ghost);
+}
+
+/* 入场动画 */
+@keyframes reveal {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.reveal {
+  animation: reveal 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  opacity: 0;
+}
+
+/* ===== Element Plus 表格统一规范 ===== */
+/* 固定列(sticky)背景修复: 覆盖 base.css 的 transparent，避免 sticky 列内容透过重叠 */
+/* 偶数行(斑马纹)固定列 */
+.el-table--striped .el-table__body tr.el-table__row--striped td.el-table-fixed-column--left,
+.el-table--striped .el-table__body tr.el-table__row--striped td.el-table-fixed-column--right {
+  background: var(--paper, #fafafa) !important;
+}
+/* 奇数行固定列 */
+.el-table--striped .el-table__body tr:not(.el-table__row--striped) td.el-table-fixed-column--left,
+.el-table--striped .el-table__body tr:not(.el-table__row--striped) td.el-table-fixed-column--right {
+  background: #ffffff !important;
+}
+/* 表头固定列 */
+.el-table .el-table__header-wrapper tr th.el-table-fixed-column--left,
+.el-table .el-table__header-wrapper tr th.el-table-fixed-column--right {
+  background: var(--paper, #fafafa) !important;
+}
+
+/* 表格单元格内容截断统一 */
+.el-table .cell {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* 表头统一 */
+.el-table th.el-table__cell {
+  background-color: var(--paper, #fafafa);
+  font-weight: 500;
+  color: var(--ghost, #a3a3a3);
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 6px 0;
+}
+
+/* 数据行统一 */
+.el-table td.el-table__cell {
+  padding: 4px 0;
+  font-size: 12px;
+}
+
+/* 固定列操作按钮不被遮挡 */
+.el-table__fixed-right .cell,
+.el-table-fixed-column--right .cell {
+  overflow: visible;
+  white-space: nowrap;
+}
+
+/* ===== Element Plus 分页统一规范 ===== */
+.el-pagination {
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.el-pagination .el-pagination__total,
+.el-pagination .el-pagination__sizes,
+.el-pagination .el-pagination__jump {
+  font-size: 11px;
+  color: var(--ghost, #a3a3a3);
+}
+
+.el-pagination .el-pagination__sizes .el-input {
+  width: 90px;
+}
+
+.el-pagination .el-pager li {
+  min-width: 28px;
+  height: 28px;
+  line-height: 28px;
+  border-radius: 0;
+  font-size: 12px;
+}
+
+.el-pagination button {
+  border-radius: 0;
+  min-width: 28px;
+  height: 28px;
+  padding: 0 6px;
+}
+
+.el-pagination .el-pagination__jump .el-input {
+  width: 44px;
+}

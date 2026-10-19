@@ -1,0 +1,119 @@
+spring:
+  application:
+    name: TestPlatform
+  profiles:
+    active: dev
+
+  # 数据源配
+  datasource:
+    # 连接池配置（可选）
+    hikari:
+      minimum-idle: 5
+      maximum-pool-size: 20
+      auto-commit: true
+      idle-timeout: 30000
+      pool-name: TestPlatformHikariCP
+      max-lifetime: 1800000
+      connection-timeout: 30000
+
+# JWT配置
+jwt:
+  secret: ${JWT_SECRET:change-me-jwt-secret-key}  # 生产环境请通过环境变量设置
+  expiration: 86400000
+
+# MyBatis Plus 配置
+mybatis-plus:
+  # Mapper XML 文件位置
+  mapper-locations: classpath*:/mapper/**/*.xml
+  # 实体类扫描路径
+  type-aliases-package: com.example.testplatform.domain.po
+  configuration:
+    # 日志实现
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    # 驼峰命名转换
+    map-underscore-to-camel-case: true
+  global-config:
+    db-config:
+      # 主键类型（AUTO 自增, ASSIGN_ID 雪花算法）
+      id-type: ASSIGN_ID
+      # 逻辑删除字段
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+
+# 服务器配置
+server:
+  # 服务端口 【可根据需要修改】
+  port: 8080
+  address: 0.0.0.0
+  servlet:
+    context-path: /
+
+flowable:                         # Flowable专属配置
+  # 核心开关
+  database-schema-update: true    # 是否自动更新数据库表结构（生产环境建议改为 false）
+  async-executor-activate: true   # 启用异步执行器，处理定时任务和异步节点
+  history-level: full             # 历史数据记录级别（FULL 用于失败回溯）
+
+  # 禁用 IDM（使用自建 user 表）
+  idm:
+    enabled: false
+
+  # 禁用 Flowable REST API（全部走自定义 Controller）
+  rest-api-enabled: false
+
+  # 字体配置（常用于流程图中显示中文）
+  activity-font-name: 宋体
+  label-font-name: 宋体
+  annotation-font-name: 宋体
+
+  # 自动部署配置
+  check-process-definitions: true # 是否自动检查并部署类路径下的流程文件
+# resource-location: classpath*:/processes/  # 默认在classpath:/processes/下寻找
+
+# 日志配置
+logging:
+  level:
+    root: INFO
+    com.example.testplatform: DEBUG
+  pattern:
+    console: '%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{50} - %msg%n'
+
+# AES 加密配置
+aes:
+  key: ${AES_KEY:change-me-aes-key}  # 默认密钥，生产环境请通过环境变量设置
+
+# HTTP 客户端配置
+http:
+  client:
+    connect-timeout: 5000    # 连接超时（毫秒）
+    read-timeout: 30000      # 读取超时（毫秒）
+    write-timeout: 30000     # 写入超时（毫秒）
+
+# 异步线程池配置
+async:
+  thread-pool:
+    core-pool-size: 10       # 核心线程数
+    max-pool-size: 50        # 最大线程数
+    queue-capacity: 200      # 队列容量
+    keep-alive-seconds: 60   # 线程空闲时间（秒）
+    thread-name-prefix: async-
+
+# Dubbo 配置
+dubbo:
+  application:
+    name: TestPlatform
+    qos-enable: false         # 关闭 QoS 服务（避免端口冲突）
+  protocol:
+    name: dubbo
+    port: -1                  # -1 表示随机端口（消费者端无需暴露端口）
+  registry:
+ #   address: nacos://127.0.0.1:8848   # Nacos 注册中心地址（请根据实际环境修改）
+    parameters:
+      namespace: ""                      # Nacos 命名空间 ID（空字符串为 public）
+      group: ""                          # Nacos 分组（按需配置）
+    timeout: 10000                    # 注册中心连接超时（毫秒）
+  consumer:
+    timeout: 30000                    # 全局消费者超时（毫秒）
+    check: false                      # 启动时不强制检查服务提供者是否可用
+    retries: 0                        # 重试次数（0 = 不重试）

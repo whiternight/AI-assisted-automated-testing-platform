@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="http://www.omg.org/spec/BPMN/20100524/MODEL"
+             xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+             xmlns:flowable="http://flowable.org/bpmn"
+             targetNamespace="http://www.flowable.org/processdef">
+
+    <process id="userActivationProcess" name="用户激活流程" isExecutable="true">
+
+        <startEvent id="startEvent" name="开始"/>
+
+        <sequenceFlow id="flow1" sourceRef="startEvent" targetRef="adminApprovalTask"/>
+
+        <userTask id="adminApprovalTask" name="管理员审批" flowable:candidateGroups="ROLE_ADMIN">
+            <documentation>请审核新注册用户：${username}</documentation>
+            <extensionElements>
+                <flowable:field name="userId">
+                    <flowable:string>${userId}</flowable:string>
+                </flowable:field>
+                <flowable:field name="username">
+                    <flowable:string>${username}</flowable:string>
+                </flowable:field>
+            </extensionElements>
+        </userTask>
+
+        <sequenceFlow id="flow2" sourceRef="adminApprovalTask" targetRef="exclusiveGateway"/>
+
+        <exclusiveGateway id="exclusiveGateway" name="审批结果"/>
+
+        <sequenceFlow id="flow3" sourceRef="exclusiveGateway" targetRef="activateUser">
+            <conditionExpression xsi:type="tFormalExpression">
+                ${approvalResult == 'approved'}
+            </conditionExpression>
+        </sequenceFlow>
+
+        <sequenceFlow id="flow4" sourceRef="exclusiveGateway" targetRef="rejectUser">
+            <conditionExpression xsi:type="tFormalExpression">
+                ${approvalResult == 'rejected'}
+            </conditionExpression>
+        </sequenceFlow>
+
+        <serviceTask id="activateUser" name="激活用户" flowable:class="com.example.testplatform.loginandregister.workflow.ActivateUserDelegate"/>
+
+        <sequenceFlow id="flow5" sourceRef="activateUser" targetRef="endEventApproved"/>
+
+        <serviceTask id="rejectUser" name="拒绝用户" flowable:class="com.example.testplatform.loginandregister.workflow.RejectUserDelegate"/>
+
+        <sequenceFlow id="flow6" sourceRef="rejectUser" targetRef="endEventRejected"/>
+
+        <endEvent id="endEventApproved" name="激活成功"/>
+
+        <endEvent id="endEventRejected" name="激活失败"/>
+
+    </process>
+
+</definitions>

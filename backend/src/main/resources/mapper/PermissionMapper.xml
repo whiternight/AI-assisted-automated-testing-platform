@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.testplatform.auth.mapper.PermissionMapper">
+    <!--
+        根据用户ID查询权限列表
+
+        关键点：
+        1. 多表关联查询（5张表）
+        2. DISTINCT去重（一个权限可能通过多个角色获得）
+        3. 过滤已删除的记录
+
+        关联关系：
+        User (用户)
+          ↓ 1:N
+        UserDepartmentRole (用户-部门-角色关联)
+          ↓ N:1
+        Role (角色)
+          ↓ 1:N
+        RolePermission (角色-权限关联)
+          ↓ N:1
+        Permission (权限)
+
+        SQL执行流程：
+        1. 从permission表开始
+        2. 关联role_permission表（找到角色对应的权限）
+        3. 关联user_department_role表（找到用户对应的角色）
+        4. 过滤条件：用户ID匹配、所有表deleted=0
+        5. 去重返回权限列表
+    -->
+    <select id="selectPermissionsByUserId" resultType="com.example.testplatform.auth.domain.po.Permission">
+        SELECT DISTINCT p.*
+        FROM permission p
+                 INNER JOIN role_permission rp ON p.id = rp.permission_id
+                 INNER JOIN user_department_role udr ON rp.role_id = udr.role_id
+        WHERE udr.user_id = #{userId}
+          AND p.deleted = 0      -- 权限未删除
+          AND rp.deleted = 0     -- 角色-权限关联未删除
+          AND udr.deleted = 0    -- 用户-角色关联未删除
+    </select>
+</mapper>

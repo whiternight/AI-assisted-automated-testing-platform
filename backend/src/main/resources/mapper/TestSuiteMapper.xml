@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.testplatform.testsuite.mapper.TestSuiteMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.example.testplatform.testsuite.domain.po.TestSuite">
+        <id column="id" property="id" />
+        <result column="name" property="name" />
+        <result column="application_id" property="applicationId" />
+        <result column="business_domain_id" property="businessDomainId" />
+        <result column="creator_id" property="creatorId" />
+        <result column="owner_id" property="ownerId" />
+        <result column="updater_id" property="updaterId" />
+        <result column="status" property="status" />
+        <result column="env" property="env" />
+        <result column="created_at" property="createdAt" />
+        <result column="updated_at" property="updatedAt" />
+        <result column="deleted" property="deleted" />
+    </resultMap>
+
+</mapper>

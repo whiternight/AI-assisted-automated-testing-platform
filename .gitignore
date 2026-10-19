@@ -1,0 +1,17 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+
+# Build outputs
+target/
+dist/
+node_modules/
+
+# Runtime
+*.log
+__pycache__/
+.venv/

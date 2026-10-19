@@ -1,0 +1,129 @@
+/**
+ * BPMN 流程执行轨迹可视化样式（全局，非 scoped）
+ * ----------------------------------------------------------------------------
+ * 颜色规范：
+ *   主色/执行中  #1890FF（蓝）
+ *   成功         #52C41A（绿）
+ *   失败         #F5222D（红）
+ *   对比色       #FFFFFF（白）
+ * 线条规范：
+ *   正常状态 2px / 突出状态 4px
+ * 动画：所有过渡使用 transform/opacity，保证流畅（>=30fps）
+ * 适配：尺寸使用 px，颜色对比满足无障碍要求，响应式下由画布缩放保持一致
+ */
+
+/* ==================== 节点状态高亮 ==================== */
+
+/* 执行中节点：蓝色描边 + 脉冲呼吸动画 */
+.djs-element.highlight-executing .djs-visual > :not(.djs-label) {
+  stroke: #1890FF !important;
+  stroke-width: 2.5px !important;
+  fill: #E6F7FF !important;
+  transition: stroke 0.3s ease, fill 0.3s ease, stroke-width 0.3s ease;
+  animation: bpmn-pulse-executing 1.4s ease-in-out infinite;
+}
+
+@keyframes bpmn-pulse-executing {
+  0%, 100% {
+    stroke-opacity: 1;
+    filter: drop-shadow(0 0 2px rgba(24, 144, 255, 0.4));
+  }
+  50% {
+    stroke-opacity: 0.6;
+    filter: drop-shadow(0 0 6px rgba(24, 144, 255, 0.9));
+  }
+}
+
+/* 已完成节点：绿色描边 + 浅绿填充 */
+.djs-element.highlight-completed .djs-visual > :not(.djs-label) {
+  stroke: #52C41A !important;
+  stroke-width: 2.5px !important;
+  fill: #F6FFED !important;
+  transition: stroke 0.3s ease, fill 0.3s ease, stroke-width 0.3s ease;
+}
+
+/* 失败节点：红色描边 + 浅红填充 + 轻微抖动 */
+.djs-element.highlight-failed .djs-visual > :not(.djs-label) {
+  stroke: #F5222D !important;
+  stroke-width: 2.5px !important;
+  fill: #FFF1F0 !important;
+  transition: stroke 0.3s ease, fill 0.3s ease, stroke-width 0.3s ease;
+  animation: bpmn-shake-failed 0.5s ease-in-out 1;
+}
+
+@keyframes bpmn-shake-failed {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-2px); }
+  75% { transform: translateX(2px); }
+}
+
+/* ==================== 连线轨迹高亮 ==================== */
+
+/* 正常连线：2px 灰色（bpmn-js 默认） */
+.djs-connection .djs-visual > path {
+  stroke: #bfbfbf !important;
+  stroke-width: 2px !important;
+  transition: stroke 0.4s ease, stroke-width 0.4s ease;
+}
+
+/* 突出连线（已走过/执行中）：4px 蓝色主色 */
+.djs-element.highlight-connection-active .djs-visual > path,
+.djs-connection.highlight-connection-active .djs-visual > path {
+  stroke: #1890FF !important;
+  stroke-width: 4px !important;
+  filter: drop-shadow(0 0 3px rgba(24, 144, 255, 0.6));
+  transition: stroke 0.4s ease, stroke-width 0.4s ease;
+  /* 流动动画，增强轨迹追踪感 */
+  stroke-dasharray: 8 4;
+  animation: bpmn-flow-dash 1s linear infinite;
+}
+
+@keyframes bpmn-flow-dash {
+  to { stroke-dashoffset: -12; }
+}
+
+/* 已完成连线（绿色实线）：已走过的路径 */
+.djs-element.highlight-connection-completed .djs-visual > path,
+.djs-connection.highlight-connection-completed .djs-visual > path {
+  stroke: #52C41A !important;
+  stroke-width: 3px !important;
+  filter: drop-shadow(0 0 2px rgba(82, 196, 26, 0.4));
+  transition: stroke 0.4s ease, stroke-width 0.4s ease;
+}
+
+/* 失效连线（失败节点之后）：灰色虚线 */
+.djs-element.highlight-connection-disabled .djs-visual > path,
+.djs-connection.highlight-connection-disabled .djs-visual > path {
+  stroke: #d9d9d9 !important;
+  stroke-width: 2px !important;
+  stroke-dasharray: 5 5 !important;
+  opacity: 0.6;
+  transition: stroke 0.4s ease, stroke-width 0.4s ease;
+}
+
+/* ==================== 节点状态图标覆盖层 ==================== */
+/* 由 BpmnCanvas 通过 SVG 注入，使用 CSS class 控制显隐与动画 */
+
+/* 执行中：顺时针旋转的圆形进度条（直径 24px） */
+.bpmn-status-spinner {
+  transform-origin: center;
+  animation: bpmn-spin 0.9s linear infinite;
+}
+
+@keyframes bpmn-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ==================== 节点错误提示气泡 ==================== */
+.bpmn-error-tooltip {
+  max-width: 300px;
+  word-break: break-all;
+  white-space: normal;
+  background: #FFF1F0;
+  border: 1px solid #FFCCC7;
+  border-radius: 4px;
+  padding: 6px 10px;
+  font-size: 12px;
+  color: #F5222D;
+  fill: #FFF1F0;
+}

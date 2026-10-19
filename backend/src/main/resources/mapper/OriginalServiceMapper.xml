@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.testplatform.originalservice.mapper.OriginalServiceMapper">
+
+    <!-- 分页查询原服务列表（关联用例、应用、部门信息） -->
+    <select id="selectOriginalServicePage" resultType="com.example.testplatform.originalservice.domain.vo.OriginalServiceVO">
+        SELECT
+            os.id,
+            os.case_id,
+            os.name,
+            ac.name AS case_name,
+            CASE COALESCE(os.protocol_type, ac.protocol_type)
+                WHEN 1 THEN 'HTTP' WHEN 2 THEN 'DUBBO' ELSE 'UNKNOWN' END AS protocol_type,
+            COALESCE(os.protocol_type, ac.protocol_type) AS protocol_type_num,
+            COALESCE(os.request_type,
+                CASE ac.request_type WHEN 0 THEN 'GET' WHEN 1 THEN 'POST' WHEN 2 THEN 'PUT' WHEN 3 THEN 'DELETE' WHEN 4 THEN 'PATCH' ELSE NULL END
+            ) AS request_type,
+            COALESCE(os.address, ac.address) AS address,
+            os.request_headers,
+            os.request_body,
+            os.is_available,
+            os.input_params,
+            os.output_params,
+            os.assertions,
+            os.service_type,
+            os.application_id,
+            app.name AS application_name,
+            dept.name AS department_name,
+            os.creator_id,
+            os.owner_id,
+            os.updater_id,
+            os.created_at,
+            os.updated_at
+        FROM original_service os
+        LEFT JOIN api_case ac ON os.case_id = ac.id AND ac.deleted = 0
+        LEFT JOIN application app ON os.application_id = app.id AND app.deleted = 0
+        LEFT JOIN department dept ON app.department_id = dept.id AND dept.deleted = 0
+        WHERE os.deleted = 0
+        <if test="keyword != null and keyword != ''">
+            AND os.name LIKE CONCAT('%', #{keyword}, '%')
+        </if>
+        <if test="applicationId != null and applicationId != ''">
+            AND os.application_id = #{applicationId}
+        </if>
+        <if test="isAvailable != null">
+            AND os.is_available = #{isAvailable}
+        </if>
+        ORDER BY os.updated_at DESC
+    </select>
+
+    <!-- 查询可选用例列表（未在原服务中的用例） -->
+    <select id="selectAvailableCasePage" resultType="com.example.testplatform.originalservice.domain.vo.AvailableCaseVO">
+        SELECT
+            ac.id,
+            ac.name,
+            ac.address,
+            CASE ac.protocol_type WHEN 1 THEN 'HTTP' WHEN 2 THEN 'DUBBO' ELSE 'UNKNOWN' END AS protocol_type,
+            CASE ac.request_type WHEN 0 THEN 'GET' WHEN 1 THEN 'POST' WHEN 2 THEN 'PUT' WHEN 3 THEN 'DELETE' WHEN 4 THEN 'PATCH' ELSE 'UNKNOWN' END AS request_type,
+            app.name AS application_name,
+            ac.application_id
+        FROM api_case ac
+        LEFT JOIN application app ON ac.application_id = app.id AND app.deleted = 0
+        WHERE ac.deleted = 0
+        <if test="excludeCaseIds != null and excludeCaseIds.size() > 0">
+            AND ac.id NOT IN
+            <foreach collection="excludeCaseIds" item="caseId" open="(" separator="," close=")">
+                #{caseId}
+            </foreach>
+        </if>
+        <if test="keyword != null and keyword != ''">
+            AND ac.name LIKE CONCAT('%', #{keyword}, '%')
+        </if>
+        <if test="applicationId != null and applicationId != ''">
+            AND ac.application_id = #{applicationId}
+        </if>
+        <if test="protocolType != null">
+            AND ac.protocol_type = #{protocolType}
+        </if>
+        ORDER BY ac.updated_at DESC
+    </select>
+
+    <!-- 根据原服务ID查询详情（关联用例、应用、部门信息） -->
+    <select id="selectOriginalServiceById" resultType="com.example.testplatform.originalservice.domain.vo.OriginalServiceVO">
+        SELECT
+            os.id,
+            os.case_id,
+            os.name,
+            ac.name AS case_name,
+            CASE COALESCE(os.protocol_type, ac.protocol_type)
+                WHEN 1 THEN 'HTTP' WHEN 2 THEN 'DUBBO' ELSE 'UNKNOWN' END AS protocol_type,
+            COALESCE(os.protocol_type, ac.protocol_type) AS protocol_type_num,
+            COALESCE(os.request_type,
+                CASE ac.request_type WHEN 0 THEN 'GET' WHEN 1 THEN 'POST' WHEN 2 THEN 'PUT' WHEN 3 THEN 'DELETE' WHEN 4 THEN 'PATCH' ELSE NULL END
+            ) AS request_type,
+            COALESCE(os.address, ac.address) AS address,
+            os.request_headers,
+            os.request_body,
+            os.is_available,
+            os.input_params,
+            os.output_params,
+            os.assertions,
+            os.service_type,
+            os.application_id,
+            app.name AS application_name,
+            dept.name AS department_name,
+            os.creator_id,
+            os.owner_id,
+            os.updater_id,
+            os.created_at,
+            os.updated_at
+        FROM original_service os
+        LEFT JOIN api_case ac ON os.case_id = ac.id AND ac.deleted = 0
+        LEFT JOIN application app ON os.application_id = app.id AND app.deleted = 0
+        LEFT JOIN department dept ON app.department_id = dept.id AND dept.deleted = 0
+        WHERE os.id = #{id} AND os.deleted = 0
+    </select>
+
+</mapper>

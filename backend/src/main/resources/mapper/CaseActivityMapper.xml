@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.example.testplatform.apicase.mapper.CaseActivityMapper">
+
+    <!-- 根据 caseId 查询活跃度记录（未删除） -->
+    <select id="selectByCaseId" resultType="com.example.testplatform.apicase.domain.po.CaseActivity">
+        SELECT *
+        FROM case_activity
+        WHERE case_id = #{caseId}
+          AND deleted = 0
+        LIMIT 1
+    </select>
+
+    <!-- 查询所有未删除且最近活跃时间早于指定时间的记录 -->
+    <select id="selectInactiveBefore" resultType="com.example.testplatform.apicase.domain.po.CaseActivity">
+        SELECT *
+        FROM case_activity
+        WHERE deleted = 0
+          AND GREATEST(
+                COALESCE(last_debug_time, '1970-01-01'),
+                COALESCE(last_flow_execute_time, '1970-01-01'),
+                COALESCE(last_suite_execute_time, '1970-01-01'),
+                COALESCE(last_view_time, '1970-01-01')
+              ) &lt; #{threshold}
+    </select>
+
+    <!-- 批量逻辑删除 -->
+    <update id="batchLogicalDelete">
+        UPDATE case_activity
+        SET deleted = 1,
+            updated_at = #{now},
+            calculated_at = #{now}
+        WHERE id IN
+        <foreach collection="ids" item="id" open="(" separator="," close=")">
+            #{id}
+        </foreach>
+          AND deleted = 0
+    </update>
+
+    <!-- 查询用例活跃度详情（关联 api_case 名称） -->
+    <select id="selectActivityDetail" resultType="com.example.testplatform.apicase.domain.vo.CaseActivityVO">
+        SELECT ca.id,
+               ca.case_id,
+               ac.name           AS case_name,
+               ac.application_id,
+               app.name          AS application_name,
+               ca.last_debug_time,
+               ca.last_flow_execute_time,
+               ca.last_suite_execute_time,
+               ca.last_view_time,
+               GREATEST(
+                   COALESCE(ca.last_debug_time, '1970-01-01'),
+                   COALESCE(ca.last_flow_execute_time, '1970-01-01'),
+                   COALESCE(ca.last_suite_execute_time, '1970-01-01'),
+                   COALESCE(ca.last_view_time, '1970-01-01')
+               )                 AS last_active_time,
+               ca.calculated_at,
+               ca.created_at,
+               ca.updated_at
+        FROM case_activity ca
+                 LEFT JOIN api_case ac ON ca.case_id = ac.id AND ac.deleted = 0
+                 LEFT JOIN application app ON ac.application_id = app.id AND app.deleted = 0
+        WHERE ca.case_id = #{caseId}
+          AND ca.deleted = 0
+        LIMIT 1
+    </select>
+
+    <!-- 分页查询活跃度列表 -->
+    <select id="selectActivityList" resultType="com.example.testplatform.apicase.domain.vo.CaseActivityVO">
+        SELECT ca.id,
+               ca.case_id,
+               ac.name           AS case_name,
+               ac.application_id,
+               app.name          AS application_name,
+               ca.last_debug_time,
+               ca.last_flow_execute_time,
+               ca.last_suite_execute_time,
+               ca.last_view_time,
+               GREATEST(
+                   COALESCE(ca.last_debug_time, '1970-01-01'),
+                   COALESCE(ca.last_flow_execute_time, '1970-01-01'),
+                   COALESCE(ca.last_suite_execute_time, '1970-01-01'),
+                   COALESCE(ca.last_view_time, '1970-01-01')
+               )                 AS last_active_time,
+               ca.calculated_at,
+               ca.created_at,
+               ca.updated_at
+        FROM case_activity ca
+                 LEFT JOIN api_case ac ON ca.case_id = ac.id AND ac.deleted = 0
+                 LEFT JOIN application app ON ac.application_id = app.id AND app.deleted = 0
+        WHERE ca.deleted = 0
+        <if test="applicationId != null and applicationId != ''">
+            AND ac.application_id = #{applicationId}
+        </if>
+        <if test="active != null and active == true">
+            AND GREATEST(
+                    COALESCE(ca.last_debug_time, '1970-01-01'),
+                    COALESCE(ca.last_flow_execute_time, '1970-01-01'),
+                    COALESCE(ca.last_suite_execute_time, '1970-01-01'),
+                    COALESCE(ca.last_view_time, '1970-01-01')
+                ) &gt;= #{threshold}
+        </if>
+        <if test="active != null and active == false">
+            AND GREATEST(
+                    COALESCE(ca.last_debug_time, '1970-01-01'),
+                    COALESCE(ca.last_flow_execute_time, '1970-01-01'),
+                    COALESCE(ca.last_suite_execute_time, '1970-01-01'),
+                    COALESCE(ca.last_view_time, '1970-01-01')
+                ) &lt; #{threshold}
+        </if>
+        ORDER BY last_active_time DESC
+    </select>
+
+    <!-- 统计活跃度概览 -->
+    <select id="selectActivityStats" resultType="com.example.testplatform.apicase.domain.vo.CaseActivityVO">
+        SELECT COUNT(*)                                                       AS total_count,
+               SUM(CASE
+                       WHEN GREATEST(
+                               COALESCE(ca.last_debug_time, '1970-01-01'),
+                               COALESCE(ca.last_flow_execute_time, '1970-01-01'),
+                               COALESCE(ca.last_suite_execute_time, '1970-01-01'),
+                               COALESCE(ca.last_view_time, '1970-01-01')
+                           ) &gt;= #{threshold} THEN 1
+                       ELSE 0
+                   END)                                                        AS active_count,
+               SUM(CASE
+                       WHEN GREATEST(
+                               COALESCE(ca.last_debug_time, '1970-01-01'),
+                               COALESCE(ca.last_flow_execute_time, '1970-01-01'),
+                               COALESCE(ca.last_suite_execute_time, '1970-01-01'),
+                               COALESCE(ca.last_view_time, '1970-01-01')
+                           ) &lt; #{threshold} THEN 1
+                       ELSE 0
+                   END)                                                        AS inactive_count
+        FROM case_activity ca
+                 LEFT JOIN api_case ac ON ca.case_id = ac.id AND ac.deleted = 0
+        WHERE ca.deleted = 0
+        <if test="applicationId != null and applicationId != ''">
+            AND ac.application_id = #{applicationId}
+        </if>
+    </select>
+
+</mapper>
